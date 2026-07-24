@@ -1,0 +1,224 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Manajemen Data Siswa
+        </h2>
+    </x-slot>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header & Tombol Tambah -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Daftar Siswa</h1>
+            <button onclick="openModal('addModal')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow">
+                + Tambah Siswa
+            </button>
+        </div>
+
+        <!-- Alert Notifikasi Sukses -->
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        <!-- Filter & Pencarian -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row justify-between gap-4">
+            <form method="GET" action="{{ route('admin.students.index') }}" class="flex flex-col md:flex-row gap-4 w-full">
+                <!-- Search -->
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama atau NISN..." class="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                
+                <!-- Filter Kelas -->
+                <select name="class_id" class="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Semua Kelas --</option>
+                    @foreach($classes as $c)
+                        <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                    @endforeach
+                </select>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">Filter</button>
+                    <a href="{{ route('admin.students.index') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg flex items-center">Reset</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabel Data Siswa -->
+        <div class="bg-white rounded-lg shadow overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NISN</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Siswa</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Kelamin</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. HP Wali</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($students as $index => $student)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $students->firstItem() + $index }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $student->nisn }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $student->name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $student->classModel->name ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @if($student->gender == 'L' || $student->gender == 'Laki-laki')
+                                    Laki-laki
+                                @else
+                                    Perempuan
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $student->guardian_phone ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $student->status == 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $student->status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium flex justify-center gap-2">
+                                <!-- Tombol Edit -->
+                                <button onclick="openEditModal({{ json_encode($student) }})" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded">Edit</button>
+                                
+                                <!-- Tombol Hapus -->
+                                <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data siswa dan akun login ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded">Hapus</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">Belum ada data siswa.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4">
+            {{ $students->withQueryString()->links() }}
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH SISWA -->
+    <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex justify-center items-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Tambah Siswa Baru</h2>
+            <form action="{{ route('admin.students.store') }}" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">NISN (Username & Password Default)</label>
+                    <input type="text" name="nisn" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap</label>
+                    <input type="text" name="name" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Pilih Kelas</label>
+                    <select name="class_id" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Pilih Kelas --</option>
+                        @foreach($classes as $c)
+                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Jenis Kelamin</label>
+                    <select name="gender" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">No. HP Wali (Opsional)</label>
+                    <input type="text" name="guardian_phone" class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
+                    <select name="status" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Aktif">Aktif</option>
+                        <option value="Keluar">Keluar</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addModal')" class="bg-gray-300 px-4 py-2 rounded-lg">Batal</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT SISWA -->
+    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex justify-center items-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Edit Data Siswa</h2>
+            <form id="editForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">NISN</label>
+                    <input type="text" id="edit_nisn" name="nisn" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap</label>
+                    <input type="text" id="edit_name" name="name" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Pilih Kelas</label>
+                    <select id="edit_class_id" name="class_id" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        @foreach($classes as $c)
+                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Jenis Kelamin</label>
+                    <select id="edit_gender" name="gender" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">No. HP Wali</label>
+                    <input type="text" id="edit_guardian_phone" name="guardian_phone" class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
+                    <select id="edit_status" name="status" required class="border rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Aktif">Aktif</option>
+                        <option value="Keluar">Keluar</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('editModal')" class="bg-gray-300 px-4 py-2 rounded-lg">Batal</button>
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">Perbarui</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Modal Handler -->
+    <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+        function openEditModal(student) {
+            document.getElementById('editForm').action = "/admin/students/" + student.id;
+            document.getElementById('edit_nisn').value = student.nisn;
+            document.getElementById('edit_name').value = student.name;
+            document.getElementById('edit_class_id').value = student.class_id;
+            document.getElementById('edit_gender').value = student.gender;
+            document.getElementById('edit_guardian_phone').value = student.guardian_phone || '';
+            document.getElementById('edit_status').value = student.status;
+            openModal('editModal');
+        }
+    </script>
+</x-app-layout>
