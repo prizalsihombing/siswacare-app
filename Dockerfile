@@ -21,18 +21,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Salin file konfigurasi composer terlebih dahulu untuk caching dependencies
-COPY composer.json composer.lock ./
-
-# Install vendor dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Salin seluruh sisa file project
+# Salin seluruh file project terlebih dahulu agar file artisan tersedia
 COPY . /var/www/html
 
+# Jalankan composer install setelah file lengkap
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Berikan izin akses folder storage dan bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 8080
 
-# Jalankan server bawaan Laravel pada port 8080 (atau port 80 jika diinginkan)
+# Jalankan server bawaan Laravel
 CMD php artisan serve --host=0.0.0.0 --port=8080
