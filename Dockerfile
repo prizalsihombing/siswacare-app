@@ -16,10 +16,9 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install ekstensi PHP yang sering dipakai Laravel (Database MySQL, dll)
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Mengatasi konflik MPM secara mutlak pada image PHP Apache
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
-    && ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/ \
-    && ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/
+# Mematikan modul MPM secara total menggunakan utilitas apache2
+RUN a2dismod mpm_event mpm_worker mpm_prefork || true \
+    && a2enmod mpm_prefork
 
 # Salin Composer resmi ke dalam container Docker
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
