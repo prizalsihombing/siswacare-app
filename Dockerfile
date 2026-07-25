@@ -1,6 +1,6 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
-# Install ekstensi dan dependencies sistem yang dibutuhkan Laravel
+# Install dependencies sistem
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -10,27 +10,21 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip
 
-# Bersihkan cache untuk memperkecil ukuran image
+# Bersihkan cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install ekstensi PHP yang sering dipakai Laravel (Database MySQL, dll)
+# Install ekstensi PHP untuk Laravel
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Mematikan modul MPM secara total menggunakan utilitas apache2
-RUN a2dismod mpm_event mpm_worker mpm_prefork || true \
-    && a2enmod mpm_prefork
-
-# Salin Composer resmi ke dalam container Docker
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Atur direktori kerja utama di dalam container
 WORKDIR /var/www/html
-
-# Salin seluruh file project dari komputer lokal ke dalam container
 COPY . /var/www/html
 
-# Berikan izin akses folder storage dan bootstrap cache agar Laravel bisa menulis log/session
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Buka port 80 untuk web server Apache
-EXPOSE 80
+EXPOSE 8080
+
+# Jalankan server bawaan Laravel
+CMD php artisan serve --host=0.0.0.0 --port=8080
