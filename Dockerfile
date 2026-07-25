@@ -32,5 +32,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 8080
 
-# Jalankan server menggunakan built-in PHP server yang mengarah ke folder public & port dinamis Railway
-CMD php artisan config:clear && php artisan route:clear && php -S 0.0.0.0:$PORT -t public
+# Jalankan migrasi otomatis, clear cache, lalu jalankan server
+CMD php artisan config:clear && php artisan route:clear && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public
