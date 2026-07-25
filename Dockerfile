@@ -24,18 +24,20 @@ WORKDIR /var/www/html
 # Salin seluruh file project
 COPY . /var/www/html
 
-# Buat file .env dari .env.example jika belum ada
-RUN [ -f .env ] || cp .env.example .env
-
 # Install vendor dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Buat folder database dan file sqlite kosong serta atur izin akses
-RUN mkdir -p /var/www/html/database && touch /var/www/html/database/database.sqlite
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache
-RUN chmod -R 775 /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache
+# Berikan izin akses folder storage dan bootstrap cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80
 
-# Jalankan key:generate, migrasi database, dan server Laravel
-CMD php artisan key:generate --force && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80
+# Jalankan perintah inisialisasi (.env, key, database sqlite, migrasi) lalu jalankan server
+CMD cp -n .env.example .env && \
+    php artisan key:generate --force && \
+    mkdir -p database && \
+    touch database/database.sqlite && \
+    php artisan config:clear && \
+    php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=80
