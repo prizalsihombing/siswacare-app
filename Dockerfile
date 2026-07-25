@@ -24,22 +24,19 @@ WORKDIR /var/www/html
 # Salin seluruh file project
 COPY . /var/www/html
 
-# Buat file .env dan folder database SQLite di tahap build
-RUN cp -n .env.example .env && \
-    mkdir -p database && \
-    touch database/database.sqlite
-
 # Install vendor dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Berikan izin akses menyeluruh untuk storage, database, dan bootstrap cache
+RUN mkdir -p database && touch database/database.sqlite
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache
 
 EXPOSE 80
 
-# Jalankan key, clear config, migrasi database, lalu jalankan server
-CMD php artisan key:generate --force && \
+# Jalankan setup .env, key, migrasi, dan server Laravel
+CMD php -r "file_exists('.env') || copy('.env.example', '.env');" && \
+    php artisan key:generate --force && \
     php artisan config:clear && \
     php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=80
