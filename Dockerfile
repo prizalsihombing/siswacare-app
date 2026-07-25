@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 # Bersihkan cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install ekstensi PHP untuk Laravel
+# Install ekstensi PHP untuk Laravel termasuk SQLite
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sqlite3 pdo_sqlite
 
 # Install Composer
@@ -30,7 +30,7 @@ RUN [ -f .env ] || cp .env.example .env
 # Install vendor dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Berikan izin akses folder storage, database, dan bootstrap cache
+# Buat folder database dan file sqlite kosong serta atur izin akses
 RUN mkdir -p /var/www/html/database && touch /var/www/html/database/database.sqlite
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache
