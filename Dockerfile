@@ -24,6 +24,9 @@ WORKDIR /var/www/html
 # Salin seluruh file project
 COPY . /var/www/html
 
+# Buat file .env dari .env.example jika belum ada
+RUN [ -f .env ] || cp .env.example .env
+
 # Install vendor dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
@@ -32,5 +35,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 80
 
-# Jalankan server bawaan Laravel pada port 80
+# Jalankan perintah key:generate dan server Laravel
 CMD php artisan key:generate --force && php artisan config:clear && php artisan serve --host=0.0.0.0 --port=80
