@@ -2,4 +2,4 @@
 cmds = ["composer install --no-dev --optimize-autoloader"]
 
 [start]
-cmd = "php artisan config:clear && php artisan cache:clear && APACHE_DOCUMENT_ROOT=/app/public apache2-foreground"
+cmd = "php artisan config:clear && php artisan serve --host=0.0.0.0 --port=$PORT"
