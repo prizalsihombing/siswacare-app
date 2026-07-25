@@ -30,7 +30,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Berikan izin akses folder storage dan bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 8080
+EXPOSE 80
 
 # Jalankan server bawaan Laravel
-CMD php artisan serve --host=0.0.0.0 --port=8080
+CMD php artisan serve --host=0.0.0.0 --port=80
