@@ -33,4 +33,4 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 EXPOSE 8080
 
 # Jalankan migrasi otomatis, clear cache, lalu jalankan server
-CMD php artisan config:clear && php artisan route:clear && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public
+CMD php artisan config:clear && php artisan route:clear && php -S 0.0.0.0:$PORT -t public
